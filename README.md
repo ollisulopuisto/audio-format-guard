@@ -21,9 +21,10 @@ The format editor uses three linked columns: sample rate, bit depth, and channel
 ## Build and install
 
 Requires macOS 13 or later and the Xcode Command Line Tools.
-The build creates an app for the Mac architecture on which it runs.
+The build creates an app for the Mac architecture on which it runs, or a universal binary (`--universal`) compatible with both Apple Silicon and Intel Macs. Universal binaries and app bundles are also automatically compiled and packaged by GitHub CI/CD on every commit and release.
 
 ```sh
+# Build native (or pass --universal for Apple Silicon + Intel)
 ./build-app.sh
 ./install-app.sh
 ```

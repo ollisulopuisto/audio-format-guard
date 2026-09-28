@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/) (`vYY.MM.DD.N`).
 
+## [v26.09.28.4] - 2026-09-28
+
+### Added
+- Automatic building of universal macOS binary (`AudioFormatGuard`), app bundle (`Audio Format Guard.app`), and zip archives in GitHub Actions CI/CD workflow.
+- GitHub Actions artifact uploading (`actions/upload-artifact@v4`) and automated GitHub Release publishing on version tags.
+- Support for `--universal` and `--zip` flags in `build-app.sh`, producing both the application bundle and standalone binary.
+- Unit tests in `Tests/AudioFormatGuardTests` verifying format choice logic and configuration persistence.
+- SwiftLint configuration (`.swiftlint.yml`) with zero lint violations across the codebase.
+
+### Changed
+- Bumped app bundle versioning to `26.09.28.4`.
+- Updated `.gitignore` with backup and temporary file patterns (`*.bak`, `*.backup`).
+
 ## [v26.09.28.3] - 2026-09-28
 
 ### Changed

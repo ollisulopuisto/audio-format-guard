@@ -2,18 +2,59 @@ name: Build Audio Format Guard
 
 on:
   push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
   pull_request:
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
+    name: Build and Package macOS Binary
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
-      - name: Build release executable
-        run: swift build -c release
-      - name: Build app bundle
-        run: ./build-app.sh
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build universal binary and app bundle
+        run: ./build-app.sh --universal --zip
+
+      - name: Verify binary architectures
+        run: |
+          file dist/AudioFormatGuard
+          file "dist/Audio Format Guard.app/Contents/MacOS/AudioFormatGuard"
+
+      - name: Stage artifacts
+        run: |
+          mkdir -p dist/artifacts
+          cp dist/AudioFormatGuard dist/artifacts/AudioFormatGuard
+          cp dist/AudioFormatGuard.zip dist/artifacts/AudioFormatGuard.zip
+          (cd dist && zip -9 artifacts/AudioFormatGuard-binary.zip AudioFormatGuard)
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioFormatGuard-macos
+          path: |
+            dist/artifacts/*
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            dist/artifacts/AudioFormatGuard
+            dist/artifacts/AudioFormatGuard.zip
+            dist/artifacts/AudioFormatGuard-binary.zip
+          generate_release_notes: true
+
