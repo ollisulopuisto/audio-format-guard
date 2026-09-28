@@ -39,7 +39,8 @@ jobs:
           mkdir -p dist/artifacts
           cp dist/AudioFormatGuard dist/artifacts/AudioFormatGuard
           cp dist/AudioFormatGuard.zip dist/artifacts/AudioFormatGuard.zip
-          (cd dist && zip -9 artifacts/AudioFormatGuard-binary.zip AudioFormatGuard)
+          cp unquarantine.command dist/artifacts/unquarantine.command
+          (cd dist && zip -9 artifacts/AudioFormatGuard-binary.zip AudioFormatGuard unquarantine.command)
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -56,5 +57,6 @@ jobs:
             dist/artifacts/AudioFormatGuard
             dist/artifacts/AudioFormatGuard.zip
             dist/artifacts/AudioFormatGuard-binary.zip
+            dist/artifacts/unquarantine.command
           generate_release_notes: true
 

@@ -79,11 +79,26 @@ PLIST
 codesign --force --sign - "$output_dir/AudioFormatGuard"
 codesign --force --sign - --deep "$app_bundle"
 
+if [[ -f "$app_root/unquarantine.command" ]]; then
+  cp "$app_root/unquarantine.command" "$output_dir/unquarantine.command"
+  chmod +x "$output_dir/unquarantine.command"
+fi
+
 echo "Built binary: $output_dir/AudioFormatGuard"
 echo "Built bundle: $app_bundle"
 
 if [[ "$create_zip" == "true" ]]; then
-  ditto -c -k --sequesterRsrc --keepParent "$app_bundle" "$output_dir/AudioFormatGuard.zip"
+  staging_dir="${TMPDIR:-/tmp}/audio-format-guard-zip-staging"
+  rm -rf "$staging_dir"
+  mkdir -p "$staging_dir"
+  cp -R "$app_bundle" "$staging_dir/"
+  if [[ -f "$app_root/unquarantine.command" ]]; then
+    cp "$app_root/unquarantine.command" "$staging_dir/"
+    chmod +x "$staging_dir/unquarantine.command"
+  fi
+  ditto -c -k --sequesterRsrc "$staging_dir" "$output_dir/AudioFormatGuard.zip"
+  rm -rf "$staging_dir"
   echo "Built archive: $output_dir/AudioFormatGuard.zip"
 fi
+
 

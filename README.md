@@ -43,7 +43,15 @@ does not permit writes. The app reports those errors in its window.
 
 The prebuilt binaries and local builds are ad-hoc signed and not notarized through Apple's Developer Program. When downloading the prebuilt app or binary from GitHub Releases, macOS Gatekeeper flags it with a quarantine attribute.
 
-If macOS warns that the app cannot be opened or is from an unidentified developer, strip the quarantine flag in Terminal:
+### Quick fix: `unquarantine.command`
+
+The release zip bundle includes [`unquarantine.command`](unquarantine.command). Simply double-click `unquarantine.command` in Finder: it will automatically remove the Gatekeeper quarantine attributes from `Audio Format Guard.app` and offer to open the app immediately.
+
+*(If macOS warns that `unquarantine.command` itself is from an unidentified developer, right-click or Control-click it in Finder and select **Open** once).*
+
+### Manual Terminal command
+
+Alternatively, you can strip the quarantine flag manually in Terminal:
 
 ```sh
 # For the app bundle:
@@ -56,7 +64,7 @@ xattr -d com.apple.quarantine AudioFormatGuard
 chmod +x AudioFormatGuard
 ```
 
-Alternatively, Control-click (or right-click) `Audio Format Guard.app` in Finder, choose **Open**, and click **Open** in the dialog.
+Or Control-click (right-click) `Audio Format Guard.app` in Finder, choose **Open**, and click **Open** in the dialog.
 
 
 Remove its login service with:

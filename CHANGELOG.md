@@ -11,6 +11,7 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`vYY.MM.
 - Automatic building of universal macOS binary (`AudioFormatGuard`), app bundle (`Audio Format Guard.app`), and zip archives in GitHub Actions CI/CD workflow.
 - GitHub Actions artifact uploading (`actions/upload-artifact@v4`) and automated GitHub Release publishing on version tags.
 - Support for `--universal` and `--zip` flags in `build-app.sh`, producing both the application bundle and standalone binary.
+- Added `unquarantine.command` script bundled in releases and archives to easily remove macOS Gatekeeper quarantine attributes and launch the app.
 - Unit tests in `Tests/AudioFormatGuardTests` verifying format choice logic and configuration persistence.
 - SwiftLint configuration (`.swiftlint.yml`) with zero lint violations across the codebase.
 
