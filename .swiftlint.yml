@@ -1,0 +1,7 @@
+excluded:
+  - .build
+  - .swiftpm
+  - dist
+
+disabled_rules:
+  - type_body_length

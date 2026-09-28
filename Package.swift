@@ -5,5 +5,11 @@ let package = Package(
     name: "AudioFormatGuard",
     platforms: [.macOS(.v13)],
     products: [.executable(name: "AudioFormatGuard", targets: ["AudioFormatGuard"])],
-    targets: [.executableTarget(name: "AudioFormatGuard")]
+    targets: [
+        .executableTarget(name: "AudioFormatGuard"),
+        .testTarget(
+            name: "AudioFormatGuardTests",
+            dependencies: ["AudioFormatGuard"]
+        )
+    ]
 )

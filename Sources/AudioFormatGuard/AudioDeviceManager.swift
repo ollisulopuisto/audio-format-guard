@@ -179,7 +179,7 @@ final class AudioDeviceManager: ObservableObject {
     }
 
     private static func readArray<T>(_ object: AudioObjectID, _ property: AudioObjectPropertyAddress,
-                                     as: T.Type = T.self) -> [T] {
+                                     as type: T.Type = T.self) -> [T] {
         var property = property
         var size: UInt32 = 0
         guard AudioObjectGetPropertyDataSize(object, &property, 0, nil, &size) == noErr,
@@ -257,11 +257,11 @@ final class AudioDeviceManager: ObservableObject {
         let standardRates = [32_000, 44_100, 48_000, 88_200, 96_000, 176_400, 192_000,
                              352_800, 384_000, 705_600, 768_000]
         return formats.flatMap { ranged -> [AudioFormatChoice] in
-            let f = ranged.mFormat
-            guard f.mFormatID == kAudioFormatLinearPCM,
-                  f.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0,
-                  f.mFormatFlags & kAudioFormatFlagIsFloat == 0 else { return [] }
-            let fixedRate = Int(f.mSampleRate.rounded())
+            let format = ranged.mFormat
+            guard format.mFormatID == kAudioFormatLinearPCM,
+                  format.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0,
+                  format.mFormatFlags & kAudioFormatFlagIsFloat == 0 else { return [] }
+            let fixedRate = Int(format.mSampleRate.rounded())
             let minimumRate = ranged.mSampleRateRange.mMinimum
             let maximumRate = ranged.mSampleRateRange.mMaximum
             var rates = standardRates.filter {
@@ -274,8 +274,8 @@ final class AudioDeviceManager: ObservableObject {
                 rates.append(fixedRate)
             }
             return rates.map { AudioFormatChoice(sampleRate: $0,
-                                                 bitDepth: Int(f.mBitsPerChannel),
-                                                 channels: Int(f.mChannelsPerFrame)) }
+                                                 bitDepth: Int(format.mBitsPerChannel),
+                                                 channels: Int(format.mChannelsPerFrame)) }
         }
     }
 
@@ -303,13 +303,13 @@ final class AudioDeviceManager: ObservableObject {
                                                     scope: kAudioObjectPropertyScopeOutput),
                                     as: AudioStreamRangedDescription.self)
             guard let match = formats.first(where: { ranged in
-                let f = ranged.mFormat
-                return f.mFormatID == kAudioFormatLinearPCM &&
-                    f.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0 &&
-                    f.mFormatFlags & kAudioFormatFlagIsFloat == 0 &&
-                    Int(f.mBitsPerChannel) == choice.bitDepth &&
-                    Int(f.mChannelsPerFrame) == choice.channels &&
-                    (f.mSampleRate == kAudioStreamAnyRate ||
+                let format = ranged.mFormat
+                return format.mFormatID == kAudioFormatLinearPCM &&
+                    format.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0 &&
+                    format.mFormatFlags & kAudioFormatFlagIsFloat == 0 &&
+                    Int(format.mBitsPerChannel) == choice.bitDepth &&
+                    Int(format.mChannelsPerFrame) == choice.channels &&
+                    (format.mSampleRate == kAudioStreamAnyRate ||
                      (Double(choice.sampleRate) >= ranged.mSampleRateRange.mMinimum &&
                       Double(choice.sampleRate) <= ranged.mSampleRateRange.mMaximum))
             }) else { continue }

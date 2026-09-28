@@ -16,6 +16,8 @@ dist/
 .DS_Store
 *.swp
 *~
+*.bak
+*.backup
 .idea/
 .vscode/
 /Screenshot*.png
