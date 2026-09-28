@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/) (`vYY.MM.DD.N`).
 
+## [v26.09.28.3] - 2026-09-28
+
+### Changed
+- Refined project description and README opening to emphasize real-world problem solving (preventing stereo fallback when AV receivers power off).
+- Bumped app bundle versioning to `26.09.28.3`.
+
 ## [v26.09.28.2] - 2026-09-28
 
 ### Added

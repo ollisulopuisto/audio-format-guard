@@ -29,8 +29,8 @@ cat > "$app_bundle/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key><string>fi.sulopuisto.audio-format-guard</string>
   <key>CFBundleExecutable</key><string>AudioFormatGuard</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleVersion</key><string>2</string>
-  <key>CFBundleShortVersionString</key><string>26.09.28.2</string>
+  <key>CFBundleVersion</key><string>3</string>
+  <key>CFBundleShortVersionString</key><string>26.09.28.3</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>

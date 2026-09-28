@@ -4,13 +4,13 @@
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue)
 
-A native macOS menu bar utility for restoring a preferred physical PCM format
-when an audio output reconnects. It is hardware-agnostic: select any CoreAudio
-output, then choose from the integer PCM formats that device advertises.
+**Stop macOS from resetting your audio setup to stereo every time your amp powers off.**
 
-The format editor uses three linked columns: sample rate, bit depth, and channel
-count. Each later column narrows to modes compatible with the earlier choices, so
-the selected combination is always one the device reports as supported.
+Turn off your AV receiver, DAC, or TV, and macOS forgets your preferred audio settings—silently falling back to plain 2-channel 44.1 kHz stereo instead of the hi-res multichannel format you configured.
+
+**Audio Format Guard** is a native macOS menu bar utility that monitors CoreAudio hardware events and automatically restores your preferred physical PCM format the instant your equipment reconnects. No more opening Audio MIDI Setup every single time you power up your sound system.
+
+The format editor uses three linked columns: sample rate, bit depth, and channel count. Each column narrows dynamically to modes compatible with your earlier choices, guaranteeing that the requested configuration is always one your hardware actually advertises as supported.
 
 <p align="center">
   <img src="docs/screenshot.png" alt="Audio Format Guard Main Window" width="520" />
