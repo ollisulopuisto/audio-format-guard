@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/) (`vYY.MM.DD.N`).
 
+## [v26.09.28.5] - 2026-09-28
+
+### Added
+- Integrated `unquarantine.command` script directly inside `AudioFormatGuard.zip` archive and standalone release assets to allow one-click Gatekeeper quarantine removal.
+- Documentation for Gatekeeper quarantine handling and `unquarantine.command` usage in `README.md`.
+
+### Changed
+- Bumped app bundle versioning to `26.09.28.5`.
+
 ## [v26.09.28.4] - 2026-09-28
 
 ### Added
