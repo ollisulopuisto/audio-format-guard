@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/) (`vYY.MM.DD.N`).
 
+## [v26.09.28.6] - 2026-09-28
+
+### Added
+- Native macOS application icon (`Resources/AppIcon.icns` and `Resources/AppIcon.png`) featuring dark squircle aesthetic with soundwave & protective shield motif.
+- Configured `CFBundleIconFile` and `CFBundleIconName` in app bundle `Info.plist`.
+- Added `scripts/generate-icon.sh` to generate Apple `.icns` files using macOS built-in `sips` and `iconutil`.
+
+### Changed
+- Bumped app bundle versioning to `26.09.28.6`.
+
 ## [v26.09.28.5] - 2026-09-28
 
 ### Added

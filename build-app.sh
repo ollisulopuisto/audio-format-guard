@@ -57,6 +57,10 @@ mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
 cp "$binary_source" "$app_bundle/Contents/MacOS/AudioFormatGuard"
 cp "$binary_source" "$output_dir/AudioFormatGuard"
 
+if [[ -f "$app_root/Resources/AppIcon.icns" ]]; then
+  cp "$app_root/Resources/AppIcon.icns" "$app_bundle/Contents/Resources/AppIcon.icns"
+fi
+
 cat > "$app_bundle/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -66,9 +70,11 @@ cat > "$app_bundle/Contents/Info.plist" <<'PLIST'
   <key>CFBundleDisplayName</key><string>Audio Format Guard</string>
   <key>CFBundleIdentifier</key><string>fi.sulopuisto.audio-format-guard</string>
   <key>CFBundleExecutable</key><string>AudioFormatGuard</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleIconName</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleVersion</key><string>5</string>
-  <key>CFBundleShortVersionString</key><string>26.09.28.5</string>
+  <key>CFBundleVersion</key><string>6</string>
+  <key>CFBundleShortVersionString</key><string>26.09.28.6</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
