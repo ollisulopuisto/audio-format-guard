@@ -15,9 +15,12 @@ if [[ ! -d "$source_app" ]]; then
 fi
 
 mkdir -p "$HOME/Applications" "$(dirname "$plist")"
-# Stop the fixed-format watcher so it cannot fight the user's new per-device rule.
-launchctl bootout "gui/$(id -u)/$legacy_label" 2>/dev/null || true
-rm -f "$legacy_plist"
+# Clean up legacy single-device watcher if present
+if [[ -f "$legacy_plist" ]]; then
+  launchctl bootout "gui/$(id -u)/$legacy_label" 2>/dev/null || true
+  rm -f "$legacy_plist"
+  echo "Cleaned up legacy watcher LaunchAgent ($legacy_label)."
+fi
 launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
 /usr/bin/osascript -e 'tell application id "fi.sulopuisto.audio-format-guard" to quit' 2>/dev/null || true
 sleep 1
@@ -39,4 +42,3 @@ PLIST
 launchctl bootstrap "gui/$(id -u)" "$plist"
 launchctl kickstart "gui/$(id -u)/$label"
 echo "Installed and started: $destination"
-echo "The old Denon-only LaunchAgent was stopped; its binary and log were preserved."

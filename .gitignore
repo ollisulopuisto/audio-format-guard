@@ -1,2 +1,30 @@
+# Swift / SwiftPM
 .build/
+.swiftpm/
+Package.resolved
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+
+# App distribution bundles
 dist/
+
+# macOS / OS files
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
+/Screenshot*.png
+/Näyttökuva*.png
+
+# Secrets and environment guards
+.env
+.env.*
+*.pem
+*.key
+config.yaml
+access.json

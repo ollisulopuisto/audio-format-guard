@@ -12,6 +12,12 @@ The format editor uses three linked columns: sample rate, bit depth, and channel
 count. Each later column narrows to modes compatible with the earlier choices, so
 the selected combination is always one the device reports as supported.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="Audio Format Guard Main Window" width="520" />
+  &nbsp;
+  <img src="docs/menubar-popup.png" alt="Audio Format Guard Menu Bar Extra" width="280" />
+</p>
+
 ## Build and install
 
 Requires macOS 13 or later and the Xcode Command Line Tools.
@@ -56,6 +62,8 @@ The window shows the current physical format next to the preferred target. A
 manual **Apply format** action works even when automatic restore is off. Recent
 activity and CoreAudio errors are shown in the window to make rejected changes
 visible.
+
+For design decisions and implementation details, see [ARCHITECTURE.md](ARCHITECTURE.md). For release history, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Limitations
 

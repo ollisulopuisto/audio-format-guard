@@ -264,35 +264,57 @@ private struct SelectionColumn: View {
         VStack(alignment: .leading, spacing: 7) {
             Text(title).font(.system(size: 9, weight: .bold)).tracking(0.65)
                 .foregroundStyle(.secondary).padding(.horizontal, 8).padding(.top, 8)
-            ScrollView {
-                VStack(spacing: 2) {
-                    ForEach(options) { option in
-                        Button { onSelect(option.value) } label: {
-                            HStack(spacing: 6) {
-                                Text(option.label).lineLimit(1)
-                                Spacer(minLength: 0)
-                                if selection == option.value {
-                                    Image(systemName: "checkmark").font(.system(size: 9, weight: .bold))
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 2) {
+                        ForEach(options) { option in
+                            Button { onSelect(option.value) } label: {
+                                HStack(spacing: 6) {
+                                    Text(option.label).lineLimit(1)
+                                    Spacer(minLength: 0)
+                                    if selection == option.value {
+                                        Image(systemName: "checkmark").font(.system(size: 9, weight: .bold))
+                                    }
                                 }
+                                .font(.system(size: 11, weight: selection == option.value ? .semibold : .regular))
+                                .padding(.horizontal, 8).padding(.vertical, 6)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(selection == option.value ? Color.accentColor.opacity(0.16) : .clear,
+                                            in: RoundedRectangle(cornerRadius: 6))
+                                .contentShape(RoundedRectangle(cornerRadius: 6))
                             }
-                            .font(.system(size: 11, weight: selection == option.value ? .semibold : .regular))
-                            .padding(.horizontal, 8).padding(.vertical, 6)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(selection == option.value ? Color.accentColor.opacity(0.16) : .clear,
-                                        in: RoundedRectangle(cornerRadius: 6))
-                            .contentShape(RoundedRectangle(cornerRadius: 6))
+                            .buttonStyle(.plain)
+                            .foregroundStyle(selection == option.value ? Color.accentColor : Color.primary)
+                            .id(option.value)
                         }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(selection == option.value ? Color.accentColor : Color.primary)
                     }
+                    .padding(.horizontal, 5).padding(.bottom, 5)
                 }
-                .padding(.horizontal, 5).padding(.bottom, 5)
+                .frame(maxHeight: 155)
+                .onAppear {
+                    scrollToSelection(proxy: proxy, animated: false)
+                }
+                .onSelectionChange(of: selection) {
+                    scrollToSelection(proxy: proxy, animated: true)
+                }
             }
-            .frame(maxHeight: 155)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(nsColor: .underPageBackgroundColor),
                     in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+    }
+
+    private func scrollToSelection(proxy: ScrollViewProxy, animated: Bool) {
+        guard let selection else { return }
+        DispatchQueue.main.async {
+            if animated {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    proxy.scrollTo(selection, anchor: .center)
+                }
+            } else {
+                proxy.scrollTo(selection, anchor: .center)
+            }
+        }
     }
 }
 
@@ -308,4 +330,13 @@ private struct CardStyle: ViewModifier {
 
 private extension View {
     func cardStyle() -> some View { modifier(CardStyle()) }
+
+    @ViewBuilder
+    func onSelectionChange<V: Equatable>(of value: V, action: @escaping () -> Void) -> some View {
+        if #available(macOS 14.0, *) {
+            self.onChange(of: value) { _, _ in action() }
+        } else {
+            self.onChange(of: value) { _ in action() }
+        }
+    }
 }
