@@ -1,0 +1,14 @@
+name: Build Audio Format Guard
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build release executable
+        run: swift build -c release
