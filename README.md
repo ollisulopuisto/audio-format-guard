@@ -41,8 +41,23 @@ assignments in Audio MIDI Setup, or resample application audio. CoreAudio may
 reject format changes while another client holds the device or when the driver
 does not permit writes. The app reports those errors in its window.
 
-The first public version is source-built and ad-hoc signed. It is not notarized;
-the build and install scripts are intended for local use by the Mac's owner.
+The prebuilt binaries and local builds are ad-hoc signed and not notarized through Apple's Developer Program. When downloading the prebuilt app or binary from GitHub Releases, macOS Gatekeeper flags it with a quarantine attribute.
+
+If macOS warns that the app cannot be opened or is from an unidentified developer, strip the quarantine flag in Terminal:
+
+```sh
+# For the app bundle:
+xattr -dr com.apple.quarantine "/Applications/Audio Format Guard.app"
+# Or in the directory where you unzipped:
+xattr -dr com.apple.quarantine "Audio Format Guard.app"
+
+# For the standalone executable:
+xattr -d com.apple.quarantine AudioFormatGuard
+chmod +x AudioFormatGuard
+```
+
+Alternatively, Control-click (or right-click) `Audio Format Guard.app` in Finder, choose **Open**, and click **Open** in the dialog.
+
 
 Remove its login service with:
 
