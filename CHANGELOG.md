@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/) (`vYY.MM.DD.N`).
 
+## [Unreleased]
+
+### Added
+- Hold App Nap while automatic format restore is armed, so macOS cannot suspend a pending restore (#3).
+- What's New sheet: after an upgrade the app shows the changelog sections newer than the last acknowledged version, and the menu bar's What's New… entry shows the full release history.
+
 ## [v26.09.28.6] - 2026-09-28
 
 ### Added

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject private var manager: AudioDeviceManager
+    @EnvironmentObject private var whatsNew: WhatsNewState
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -36,6 +37,11 @@ struct MenuBarView: View {
             Divider()
             Button("Open Audio Format Guard…") { openWindow(id: "main") }
                 .buttonStyle(.plain).font(.system(size: 11, weight: .medium))
+            Button("What's New…") {
+                openWindow(id: "main")
+                whatsNew.showHistory()
+            }
+            .buttonStyle(.plain).font(.system(size: 11))
             Button("Quit") { NSApplication.shared.terminate(nil) }
                 .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(.secondary)
         }
