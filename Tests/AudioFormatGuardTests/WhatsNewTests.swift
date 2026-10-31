@@ -78,7 +78,7 @@ final class WhatsNewTests: XCTestCase {
         XCTAssertEqual(sections.first?.version, "v26.09.28.6")
     }
 
-    func testMarkerOnlyMovesForward() {
+    @MainActor func testMarkerOnlyMovesForward() {
         let suite = UserDefaults(suiteName: "WhatsNewTests.\(UUID().uuidString)")!
         WhatsNewState.recordSeen("v26.09.28.6", defaults: suite)
         XCTAssertEqual(suite.string(forKey: "whatsNewSeenVersion"), "v26.09.28.6")
