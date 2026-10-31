@@ -61,6 +61,11 @@ if [[ -f "$app_root/Resources/AppIcon.icns" ]]; then
   cp "$app_root/Resources/AppIcon.icns" "$app_bundle/Contents/Resources/AppIcon.icns"
 fi
 
+# Ship the changelog so the What's New sheet can read it from the bundle.
+if [[ -f "$app_root/CHANGELOG.md" ]]; then
+  cp "$app_root/CHANGELOG.md" "$app_bundle/Contents/Resources/CHANGELOG.md"
+fi
+
 cat > "$app_bundle/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
