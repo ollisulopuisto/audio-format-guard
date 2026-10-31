@@ -38,6 +38,11 @@ final class AudioDeviceManager: ObservableObject {
     private var lastAppliedSignature = ""
     private var refreshQueued = false
     private var changingDevice = false
+    /// Held while any device profile arms automatic restore: App Nap would delay
+    /// the HAL-listener -> debounce -> format-restore path when the window is
+    /// closed, leaving the amp in stereo for seconds after reconnect. The
+    /// background option only disables App Nap; display/system sleep unaffected.
+    private var napAssertion: NSObjectProtocol?
     private let profileKey = "AudioFormatGuard.profile"
     private let selectedDeviceKey = "AudioFormatGuard.selectedDevice"
     private var profiles: [String: AudioProfile] = [:]
@@ -55,8 +60,23 @@ final class AudioDeviceManager: ObservableObject {
         selectedUID = initialProfile?.deviceUID
         selectedFormat = initialProfile?.format
         automaticallyRestore = initialProfile?.automaticallyRestore ?? false
+        updateAppNapHold()
         listen(AudioObjectID(kAudioObjectSystemObject), selector: kAudioHardwarePropertyDevices)
         refresh()
+    }
+
+    /// Hold an App Nap assertion exactly while an automatic-restore profile exists.
+    private func updateAppNapHold() {
+        let needed = profiles.values.contains { $0.automaticallyRestore }
+        if needed, napAssertion == nil {
+            napAssertion = ProcessInfo.processInfo.beginActivity(
+                options: .background,
+                reason: "Restoring audio formats on device reconnect"
+            )
+        } else if !needed, let assertion = napAssertion {
+            ProcessInfo.processInfo.endActivity(assertion)
+            napAssertion = nil
+        }
     }
 
     var selectedDevice: AudioOutputDevice? {
@@ -139,6 +159,7 @@ final class AudioDeviceManager: ObservableObject {
         guard let selectedUID, let selectedFormat else { return }
         profiles[selectedUID] = AudioProfile(deviceUID: selectedUID, format: selectedFormat,
                                              automaticallyRestore: automaticallyRestore)
+        updateAppNapHold()
         guard let data = try? JSONEncoder().encode(profiles) else { return }
         UserDefaults.standard.set(data, forKey: profileKey)
     }
