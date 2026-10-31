@@ -54,7 +54,7 @@ enum ChangelogNotes {
     /// Numeric per-segment compare, ignoring a leading "v". A missing trailing
     /// segment counts as zero, so 26.09.28 < 26.09.28.1.
     static func compareVersions(_ a: String, _ b: String) -> Int {
-        func parts(_ v: String) -> [Int] {
+        func parts(_ v: String) -> String {
             v.hasPrefix("v") || v.hasPrefix("V") ? String(v.dropFirst()) : v
         }
         let pa = parts(a).split(separator: ".").map { Int($0) ?? 0 }
