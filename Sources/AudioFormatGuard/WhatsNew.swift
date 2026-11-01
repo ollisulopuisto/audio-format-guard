@@ -29,19 +29,21 @@ enum ChangelogNotes {
             }
         }
 
-        for line in markdown.components(separatedBy: .newlines) {
+        // Optimization: Use enumerateLines to stream lines lazily without allocating
+        // an intermediate array of String instances for every line in the markdown.
+        markdown.enumerateLines { line, _ in
             if line.hasPrefix("## ") {
                 flush()
                 currentVersion = nil
                 items = []
                 guard let open = line.firstIndex(of: "["),
-                      let close = line.firstIndex(of: "]"), open < close else { continue }
+                      let close = line.firstIndex(of: "]"), open < close else { return }
                 let name = String(line[line.index(after: open)..<close])
                 if name != "Unreleased", !name.isEmpty {
                     currentVersion = name
                 }
             } else if line.hasPrefix("### ") {
-                continue
+                return
             } else if currentVersion != nil, line.hasPrefix("- ") {
                 let item = line.dropFirst(2).trimmingCharacters(in: .whitespaces)
                 if !item.isEmpty { items.append(item) }
