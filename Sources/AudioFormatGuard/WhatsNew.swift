@@ -53,20 +53,26 @@ enum ChangelogNotes {
         return sections
     }
 
-    /// Numeric per-segment compare, ignoring a leading "v". A missing trailing
+    /// Numeric per-segment compare, ignoring a leading "v" or "V". A missing trailing
     /// segment counts as zero, so 26.09.28 < 26.09.28.1.
+    ///
+    /// Optimization: Stream version segments lazily using Substring splits and iterators
+    /// without allocating intermediate String instances or [Int] arrays. Short-circuits
+    /// on the first differing segment.
     static func compareVersions(_ a: String, _ b: String) -> Int {
-        func parts(_ v: String) -> String {
-            v.hasPrefix("v") || v.hasPrefix("V") ? String(v.dropFirst()) : v
-        }
-        let pa = parts(a).split(separator: ".").map { Int($0) ?? 0 }
-        let pb = parts(b).split(separator: ".").map { Int($0) ?? 0 }
-        for i in 0..<max(pa.count, pb.count) {
-            let va = i < pa.count ? pa[i] : 0
-            let vb = i < pb.count ? pb[i] : 0
+        let rawA = (a.hasPrefix("v") || a.hasPrefix("V")) ? a.dropFirst() : a[...]
+        let rawB = (b.hasPrefix("v") || b.hasPrefix("V")) ? b.dropFirst() : b[...]
+        var iterA = rawA.split(separator: ".").makeIterator()
+        var iterB = rawB.split(separator: ".").makeIterator()
+
+        while true {
+            let nextA = iterA.next()
+            let nextB = iterB.next()
+            if nextA == nil && nextB == nil { return 0 }
+            let va = nextA.flatMap { Int($0) } ?? 0
+            let vb = nextB.flatMap { Int($0) } ?? 0
             if va != vb { return va < vb ? -1 : 1 }
         }
-        return 0
     }
 
     /// Sections newer than `lastSeen`, up to and including `current`.

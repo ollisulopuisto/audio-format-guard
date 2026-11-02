@@ -44,8 +44,13 @@ final class WhatsNewTests: XCTestCase {
     func testCompareVersionsIsNumericPerSegmentAndIgnoresVPrefix() {
         XCTAssertEqual(ChangelogNotes.compareVersions("v26.09.28.5", "v26.09.28.6"), -1)
         XCTAssertEqual(ChangelogNotes.compareVersions("26.09.28.6", "v26.09.28.6"), 0)
+        XCTAssertEqual(ChangelogNotes.compareVersions("V26.09.28.6", "v26.09.28.6"), 0)
         XCTAssertEqual(ChangelogNotes.compareVersions("v26.09.20", "v26.09.28.5"), -1)
         XCTAssertEqual(ChangelogNotes.compareVersions("v26.09.28.6", "v26.09.28.6"), 0)
+        XCTAssertEqual(ChangelogNotes.compareVersions("26.09.28", "26.09.28.1"), -1)
+        XCTAssertEqual(ChangelogNotes.compareVersions("26.09.28.1", "26.09.28"), 1)
+        XCTAssertEqual(ChangelogNotes.compareVersions("1.0.0", "1.0"), 0)
+        XCTAssertEqual(ChangelogNotes.compareVersions("2.1", "2.0.9"), 1)
     }
 
     func testSectionsSinceShowsOnlyTheUpgradeWindow() {
