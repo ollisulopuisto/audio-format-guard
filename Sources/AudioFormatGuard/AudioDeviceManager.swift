@@ -6,6 +6,7 @@ import SwiftUI
 /// A point-in-time view of one output device and its advertised physical PCM modes.
 struct AudioOutputDevice: Identifiable, Hashable {
     let id: String
+    let deviceID: AudioDeviceID
     let name: String
     let isAlive: Bool
     let currentFormat: AudioFormatChoice?
@@ -117,7 +118,7 @@ final class AudioDeviceManager: ObservableObject {
         applying = true
         defer { applying = false }
         do {
-            try Self.apply(choice, toUID: device.id)
+            try Self.apply(choice, to: device.deviceID)
             lastError = nil
             record("Applied \(choice.summary) to \(device.name)")
             lastAppliedSignature = "\(device.id):\(choice.id)"
@@ -134,12 +135,13 @@ final class AudioDeviceManager: ObservableObject {
         let currentUID = selectedUID
         let updated = Self.enumerateDevices()
         devices = updated.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        // Optimization: Use device.deviceID directly instead of re-querying all system devices
+        // and fetching device UIDs over CoreAudio HAL for each device (eliminates redundant O(N^2) IPC queries).
         for device in devices {
-            guard let deviceID = Self.deviceID(for: device.id) else { continue }
-            listen(deviceID, selector: kAudioDevicePropertyDeviceIsAlive)
-            listen(deviceID, selector: kAudioDevicePropertyStreams,
+            listen(device.deviceID, selector: kAudioDevicePropertyDeviceIsAlive)
+            listen(device.deviceID, selector: kAudioDevicePropertyStreams,
                    scope: kAudioDevicePropertyScopeOutput)
-            for streamID in Self.outputStreams(deviceID) {
+            for streamID in Self.outputStreams(device.deviceID) {
                 listen(streamID, selector: kAudioStreamPropertyAvailablePhysicalFormats,
                        scope: kAudioObjectPropertyScopeOutput)
                 listen(streamID, selector: kAudioStreamPropertyPhysicalFormat,
@@ -239,10 +241,6 @@ final class AudioDeviceManager: ObservableObject {
         readString(object, address(kAudioDevicePropertyDeviceUID))
     }
 
-    fileprivate static func deviceID(for uid: String) -> AudioDeviceID? {
-        allDeviceIDs().first { readUID($0) == uid }
-    }
-
     private static func allDeviceIDs() -> [AudioDeviceID] {
         readArray(AudioObjectID(kAudioObjectSystemObject),
                   address(kAudioHardwarePropertyDevices), as: AudioDeviceID.self)
@@ -265,7 +263,7 @@ final class AudioDeviceManager: ObservableObject {
                 return $0.bitDepth < $1.bitDepth
             }
             let current = streams.compactMap(currentChoice).first
-            return AudioOutputDevice(id: uid, name: name, isAlive: alive,
+            return AudioOutputDevice(id: uid, deviceID: device, name: name, isAlive: alive,
                                      currentFormat: current, choices: choices)
         }
     }
@@ -314,9 +312,8 @@ final class AudioDeviceManager: ObservableObject {
 
     /// Re-reads capabilities before setting the stream, because HDMI capabilities can change
     /// between rendering the UI and applying a choice.
-    private static func apply(_ choice: AudioFormatChoice, toUID uid: String) throws {
-        guard let device = deviceID(for: uid),
-              readUInt32(device, address(kAudioDevicePropertyDeviceIsAlive)) == 1 else {
+    private static func apply(_ choice: AudioFormatChoice, to device: AudioDeviceID) throws {
+        guard readUInt32(device, address(kAudioDevicePropertyDeviceIsAlive)) == 1 else {
             throw AudioFormatError.deviceUnavailable
         }
         for stream in outputStreams(device) {
