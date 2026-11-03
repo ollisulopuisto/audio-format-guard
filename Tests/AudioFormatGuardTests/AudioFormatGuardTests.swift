@@ -32,4 +32,23 @@ final class AudioFormatGuardTests: XCTestCase {
         XCTAssertEqual(decoded.format.channels, 2)
         XCTAssertTrue(decoded.automaticallyRestore)
     }
+
+    func testAudioOutputDeviceProperties() {
+        let choice = AudioFormatChoice(sampleRate: 48_000, bitDepth: 24, channels: 2)
+        let device = AudioOutputDevice(
+            id: "uid-123",
+            deviceID: 42,
+            name: "Test Output",
+            isAlive: true,
+            currentFormat: choice,
+            choices: [choice]
+        )
+
+        XCTAssertEqual(device.id, "uid-123")
+        XCTAssertEqual(device.deviceID, 42)
+        XCTAssertEqual(device.name, "Test Output")
+        XCTAssertTrue(device.isAlive)
+        XCTAssertEqual(device.currentFormat, choice)
+        XCTAssertEqual(device.choices, [choice])
+    }
 }
