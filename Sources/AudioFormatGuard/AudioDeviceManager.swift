@@ -251,13 +251,24 @@ final class AudioDeviceManager: ObservableObject {
                                   scope: kAudioDevicePropertyScopeOutput), as: AudioStreamID.self)
     }
 
+    // Optimization: Statically allocate standard sample rates once instead of re-allocating
+    // an 11-element Int array on every stream format range during device enumeration.
+    private static let standardRates = [
+        32_000, 44_100, 48_000, 88_200, 96_000, 176_400, 192_000,
+        352_800, 384_000, 705_600, 768_000
+    ]
+
     private static func enumerateDevices() -> [AudioOutputDevice] {
         allDeviceIDs().compactMap { device in
             guard let uid = readUID(device),
                   let name = readString(device, address(kAudioObjectPropertyName)) else { return nil }
             let alive = readUInt32(device, address(kAudioDevicePropertyDeviceIsAlive)) == 1
             let streams = outputStreams(device)
-            let choices = Array(Set(streams.flatMap(supportedChoices))).sorted {
+            var uniqueChoices = Set<AudioFormatChoice>()
+            for stream in streams {
+                collectSupportedChoices(from: stream, into: &uniqueChoices)
+            }
+            let choices = uniqueChoices.sorted {
                 if $0.channels != $1.channels { return $0.channels < $1.channels }
                 if $0.sampleRate != $1.sampleRate { return $0.sampleRate < $1.sampleRate }
                 return $0.bitDepth < $1.bitDepth
@@ -269,32 +280,40 @@ final class AudioDeviceManager: ObservableObject {
     }
 
     /// Converts the device's reported physical format ranges to selectable UI choices.
-    private static func supportedChoices(_ stream: AudioStreamID) -> [AudioFormatChoice] {
+    /// Optimization: Inserts directly into `choices` to avoid intermediate array allocations
+    /// from `filter`, `map`, and `flatMap`.
+    private static func collectSupportedChoices(from stream: AudioStreamID,
+                                                into choices: inout Set<AudioFormatChoice>) {
         let formats = readArray(stream, address(kAudioStreamPropertyAvailablePhysicalFormats,
                                                 scope: kAudioObjectPropertyScopeOutput),
                                 as: AudioStreamRangedDescription.self)
-        let standardRates = [32_000, 44_100, 48_000, 88_200, 96_000, 176_400, 192_000,
-                             352_800, 384_000, 705_600, 768_000]
-        return formats.flatMap { ranged -> [AudioFormatChoice] in
+        for ranged in formats {
             let format = ranged.mFormat
             guard format.mFormatID == kAudioFormatLinearPCM,
                   format.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0,
-                  format.mFormatFlags & kAudioFormatFlagIsFloat == 0 else { return [] }
+                  format.mFormatFlags & kAudioFormatFlagIsFloat == 0 else { continue }
+            let bitDepth = Int(format.mBitsPerChannel)
+            let channels = Int(format.mChannelsPerFrame)
             let fixedRate = Int(format.mSampleRate.rounded())
             let minimumRate = ranged.mSampleRateRange.mMinimum
             let maximumRate = ranged.mSampleRateRange.mMaximum
-            var rates = standardRates.filter {
-                Double($0) >= minimumRate && Double($0) <= maximumRate
-            }
+
             if minimumRate == maximumRate, fixedRate > 0 {
-                rates = [fixedRate]
-            } else if fixedRate > 0, Double(fixedRate) >= minimumRate,
-                      Double(fixedRate) <= maximumRate, !rates.contains(fixedRate) {
-                rates.append(fixedRate)
+                choices.insert(AudioFormatChoice(sampleRate: fixedRate, bitDepth: bitDepth, channels: channels))
+            } else {
+                var matchedFixedRate = false
+                for rate in standardRates {
+                    let rateDouble = Double(rate)
+                    if rateDouble >= minimumRate && rateDouble <= maximumRate {
+                        choices.insert(AudioFormatChoice(sampleRate: rate, bitDepth: bitDepth, channels: channels))
+                        if rate == fixedRate { matchedFixedRate = true }
+                    }
+                }
+                if fixedRate > 0, !matchedFixedRate,
+                   Double(fixedRate) >= minimumRate, Double(fixedRate) <= maximumRate {
+                    choices.insert(AudioFormatChoice(sampleRate: fixedRate, bitDepth: bitDepth, channels: channels))
+                }
             }
-            return rates.map { AudioFormatChoice(sampleRate: $0,
-                                                 bitDepth: Int(format.mBitsPerChannel),
-                                                 channels: Int(format.mChannelsPerFrame)) }
         }
     }
 
