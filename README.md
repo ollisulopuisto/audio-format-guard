@@ -41,7 +41,7 @@ assignments in Audio MIDI Setup, or resample application audio. CoreAudio may
 reject format changes while another client holds the device or when the driver
 does not permit writes. The app reports those errors in its window.
 
-The prebuilt binaries and local builds are ad-hoc signed and not notarized through Apple's Developer Program. When downloading the prebuilt app or binary from GitHub Releases, macOS Gatekeeper flags it with a quarantine attribute.
+GitHub release apps and binaries are Developer ID signed but not notarized. Local builds are ad-hoc signed. Downloaded release files still have a quarantine attribute; use the included `unquarantine.command` if Gatekeeper asks you to approve the app.
 
 ### Quick fix: `unquarantine.command`
 

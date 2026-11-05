@@ -87,8 +87,20 @@ cat > "$app_bundle/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-codesign --force --sign - "$output_dir/AudioFormatGuard"
-codesign --force --sign - --deep "$app_bundle"
+if [[ -n "${APPLE_SIGNING_IDENTITY:-}" ]]; then
+  # Sign every executable before the app bundle that seals it.
+  codesign --force --timestamp --options runtime \
+    --sign "$APPLE_SIGNING_IDENTITY" "$output_dir/AudioFormatGuard"
+  codesign --force --timestamp --options runtime \
+    --sign "$APPLE_SIGNING_IDENTITY" "$app_bundle/Contents/MacOS/AudioFormatGuard"
+  codesign --force --timestamp --options runtime \
+    --sign "$APPLE_SIGNING_IDENTITY" "$app_bundle"
+  codesign --verify --strict --verbose=2 "$output_dir/AudioFormatGuard"
+  codesign --verify --deep --strict --verbose=2 "$app_bundle"
+else
+  codesign --force --sign - "$output_dir/AudioFormatGuard"
+  codesign --force --sign - --deep "$app_bundle"
+fi
 
 if [[ -f "$app_root/unquarantine.command" ]]; then
   cp "$app_root/unquarantine.command" "$output_dir/unquarantine.command"
@@ -102,7 +114,7 @@ if [[ "$create_zip" == "true" ]]; then
   staging_dir="${TMPDIR:-/tmp}/audio-format-guard-zip-staging"
   rm -rf "$staging_dir"
   mkdir -p "$staging_dir"
-  cp -R "$app_bundle" "$staging_dir/"
+  ditto "$app_bundle" "$staging_dir/Audio Format Guard.app"
   if [[ -f "$app_root/unquarantine.command" ]]; then
     cp "$app_root/unquarantine.command" "$staging_dir/"
     chmod +x "$staging_dir/unquarantine.command"
