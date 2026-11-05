@@ -11,6 +11,33 @@ struct AudioOutputDevice: Identifiable, Hashable {
     let isAlive: Bool
     let currentFormat: AudioFormatChoice?
     let choices: [AudioFormatChoice]
+    let streamIDs: [AudioStreamID]
+
+    init(
+        id: String,
+        deviceID: AudioDeviceID,
+        name: String,
+        isAlive: Bool,
+        currentFormat: AudioFormatChoice?,
+        choices: [AudioFormatChoice],
+        streamIDs: [AudioStreamID] = []
+    ) {
+        self.id = id
+        self.deviceID = deviceID
+        self.name = name
+        self.isAlive = isAlive
+        self.currentFormat = currentFormat
+        self.choices = choices
+        self.streamIDs = streamIDs
+    }
+}
+
+/// A lightweight, stack-allocated hashable key for tracked CoreAudio HAL property listeners.
+/// Optimization: Avoids heap string allocations and string formatting on every listener registration.
+private struct PropertyListenerKey: Hashable {
+    let object: AudioObjectID
+    let selector: AudioObjectPropertySelector
+    let scope: AudioObjectPropertyScope
 }
 
 @MainActor
@@ -35,7 +62,7 @@ final class AudioDeviceManager: ObservableObject {
         }
     }
 
-    private var watched = Set<String>()
+    private var watched = Set<PropertyListenerKey>()
     private var lastAppliedSignature = ""
     private var refreshQueued = false
     private var changingDevice = false
@@ -118,7 +145,7 @@ final class AudioDeviceManager: ObservableObject {
         applying = true
         defer { applying = false }
         do {
-            try Self.apply(choice, to: device.deviceID)
+            try Self.apply(choice, to: device.deviceID, streams: device.streamIDs)
             lastError = nil
             record("Applied \(choice.summary) to \(device.name)")
             lastAppliedSignature = "\(device.id):\(choice.id)"
@@ -137,11 +164,12 @@ final class AudioDeviceManager: ObservableObject {
         devices = updated.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         // Optimization: Use device.deviceID directly instead of re-querying all system devices
         // and fetching device UIDs over CoreAudio HAL for each device (eliminates redundant O(N^2) IPC queries).
+        // Optimization: Re-use cached device.streamIDs instead of repeatedly querying HAL outputStreams.
         for device in devices {
             listen(device.deviceID, selector: kAudioDevicePropertyDeviceIsAlive)
             listen(device.deviceID, selector: kAudioDevicePropertyStreams,
                    scope: kAudioDevicePropertyScopeOutput)
-            for streamID in Self.outputStreams(device.deviceID) {
+            for streamID in device.streamIDs {
                 listen(streamID, selector: kAudioStreamPropertyAvailablePhysicalFormats,
                        scope: kAudioObjectPropertyScopeOutput)
                 listen(streamID, selector: kAudioStreamPropertyPhysicalFormat,
@@ -183,9 +211,10 @@ final class AudioDeviceManager: ObservableObject {
     }
 
     /// Watches one HAL property once for the lifetime of this manager.
+    /// Optimization: Uses PropertyListenerKey struct to eliminate intermediate string allocations.
     private func listen(_ object: AudioObjectID, selector: AudioObjectPropertySelector,
                         scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) {
-        let key = "\(object):\(selector):\(scope)"
+        let key = PropertyListenerKey(object: object, selector: selector, scope: scope)
         guard watched.insert(key).inserted else { return }
         var address = Self.address(selector, scope: scope)
         let status = AudioObjectAddPropertyListenerBlock(object, &address, .main) { [weak self] _, _ in
@@ -275,7 +304,7 @@ final class AudioDeviceManager: ObservableObject {
             }
             let current = streams.compactMap(currentChoice).first
             return AudioOutputDevice(id: uid, deviceID: device, name: name, isAlive: alive,
-                                     currentFormat: current, choices: choices)
+                                     currentFormat: current, choices: choices, streamIDs: streams)
         }
     }
 
@@ -331,11 +360,14 @@ final class AudioDeviceManager: ObservableObject {
 
     /// Re-reads capabilities before setting the stream, because HDMI capabilities can change
     /// between rendering the UI and applying a choice.
-    private static func apply(_ choice: AudioFormatChoice, to device: AudioDeviceID) throws {
+    /// Optimization: Re-uses known streams when provided, avoiding a redundant HAL outputStreams query.
+    private static func apply(_ choice: AudioFormatChoice, to device: AudioDeviceID,
+                              streams: [AudioStreamID] = []) throws {
         guard readUInt32(device, address(kAudioDevicePropertyDeviceIsAlive)) == 1 else {
             throw AudioFormatError.deviceUnavailable
         }
-        for stream in outputStreams(device) {
+        let targetStreams = streams.isEmpty ? outputStreams(device) : streams
+        for stream in targetStreams {
             let formats = readArray(stream, address(kAudioStreamPropertyAvailablePhysicalFormats,
                                                     scope: kAudioObjectPropertyScopeOutput),
                                     as: AudioStreamRangedDescription.self)
