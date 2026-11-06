@@ -8,23 +8,35 @@ struct MainWindow: View {
     private var selectedBitDepth: Int? { manager.selectedFormat?.bitDepth }
     private var selectedChannels: Int? { manager.selectedFormat?.channels }
 
+    // Optimization: Deduplicate and sort choices directly via a Set into sorted options,
+    // avoiding multiple intermediate array allocations from chained map, filter, Set, and sorted.
     private var sampleRates: [SelectionOption] {
-        Array(Set(formatChoices.map(\.sampleRate))).sorted().map {
+        var uniqueRates = Set<Int>()
+        for choice in formatChoices {
+            uniqueRates.insert(choice.sampleRate)
+        }
+        return uniqueRates.sorted().map {
             SelectionOption(value: $0, label: AudioFormatChoice(sampleRate: $0, bitDepth: 0, channels: 0).rateLabel)
         }
     }
 
     private var bitDepths: [SelectionOption] {
         guard let selectedSampleRate else { return [] }
-        return Array(Set(formatChoices.filter { $0.sampleRate == selectedSampleRate }.map(\.bitDepth)))
-            .sorted().map { SelectionOption(value: $0, label: "\($0)-bit") }
+        var uniqueDepths = Set<Int>()
+        for choice in formatChoices where choice.sampleRate == selectedSampleRate {
+            uniqueDepths.insert(choice.bitDepth)
+        }
+        return uniqueDepths.sorted().map { SelectionOption(value: $0, label: "\($0)-bit") }
     }
 
     private var channelCounts: [SelectionOption] {
         guard let selectedSampleRate, let selectedBitDepth else { return [] }
-        return Array(Set(formatChoices.filter {
-            $0.sampleRate == selectedSampleRate && $0.bitDepth == selectedBitDepth
-        }.map(\.channels))).sorted().map { SelectionOption(value: $0, label: channelLabel($0)) }
+        var uniqueChannels = Set<Int>()
+        for choice in formatChoices
+            where choice.sampleRate == selectedSampleRate && choice.bitDepth == selectedBitDepth {
+            uniqueChannels.insert(choice.channels)
+        }
+        return uniqueChannels.sorted().map { SelectionOption(value: $0, label: channelLabel($0)) }
     }
 
     private func chooseSampleRate(_ rate: Int) {
