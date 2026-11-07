@@ -57,12 +57,28 @@ struct MainWindow: View {
         }
     }
 
+    // Optimization: Single-pass search directly over formatChoices avoids allocating an
+    // intermediate filtered array and short-circuits immediately upon finding an exact match.
     private func bestChoice(for rate: Int, bitDepth: Int, channels: Int) -> AudioFormatChoice? {
-        let atRate = formatChoices.filter { $0.sampleRate == rate }
-        return atRate.first { $0.bitDepth == bitDepth && $0.channels == channels }
-            ?? atRate.first { $0.bitDepth == bitDepth }
-            ?? atRate.first { $0.channels == channels }
-            ?? atRate.first
+        var depthMatch: AudioFormatChoice?
+        var channelMatch: AudioFormatChoice?
+        var firstAtRate: AudioFormatChoice?
+
+        for choice in formatChoices where choice.sampleRate == rate {
+            if choice.bitDepth == bitDepth && choice.channels == channels {
+                return choice
+            }
+            if depthMatch == nil && choice.bitDepth == bitDepth {
+                depthMatch = choice
+            }
+            if channelMatch == nil && choice.channels == channels {
+                channelMatch = choice
+            }
+            if firstAtRate == nil {
+                firstAtRate = choice
+            }
+        }
+        return depthMatch ?? channelMatch ?? firstAtRate
     }
 
     private func channelLabel(_ count: Int) -> String {
