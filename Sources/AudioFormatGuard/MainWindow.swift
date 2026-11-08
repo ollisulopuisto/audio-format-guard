@@ -16,7 +16,8 @@ struct MainWindow: View {
             uniqueRates.insert(choice.sampleRate)
         }
         return uniqueRates.sorted().map {
-            SelectionOption(value: $0, label: AudioFormatChoice(sampleRate: $0, bitDepth: 0, channels: 0).rateLabel)
+            // Optimization: Formats sample rate directly without instantiating dummy AudioFormatChoice structs.
+            SelectionOption(value: $0, label: AudioFormatChoice.rateLabel(for: $0))
         }
     }
 

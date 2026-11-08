@@ -14,6 +14,13 @@ final class AudioFormatGuardTests: XCTestCase {
 
         let subKilo = AudioFormatChoice(sampleRate: 800, bitDepth: 16, channels: 1)
         XCTAssertEqual(subKilo.rateLabel, "800 Hz")
+
+        // Test static rateLabel(for:) directly
+        XCTAssertEqual(AudioFormatChoice.rateLabel(for: 192_000), "192 kHz")
+        XCTAssertEqual(AudioFormatChoice.rateLabel(for: 44_100), "44.1 kHz")
+        XCTAssertEqual(AudioFormatChoice.rateLabel(for: 48_000), "48 kHz")
+        XCTAssertEqual(AudioFormatChoice.rateLabel(for: 88_200), "88.2 kHz")
+        XCTAssertEqual(AudioFormatChoice.rateLabel(for: 800), "800 Hz")
     }
 
     func testAudioProfileCodable() throws {
