@@ -7,12 +7,15 @@ struct AudioFormatChoice: Hashable, Identifiable, Codable {
     var channels: Int
 
     var id: String { "\(sampleRate)-\(bitDepth)-\(channels)" }
-    var rateLabel: String {
+    /// Optimization: Formats sample rate label directly without constructing dummy AudioFormatChoice instances.
+    static func rateLabel(for sampleRate: Int) -> String {
         guard sampleRate >= 1_000 else { return "\(sampleRate) Hz" }
         return sampleRate.isMultiple(of: 1_000)
             ? "\(sampleRate / 1_000) kHz"
             : String(format: "%.1f kHz", Double(sampleRate) / 1_000)
     }
+
+    var rateLabel: String { Self.rateLabel(for: sampleRate) }
     var summary: String { "\(rateLabel) · \(bitDepth)-bit · \(channels) ch" }
 }
 
