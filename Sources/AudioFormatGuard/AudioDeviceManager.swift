@@ -302,7 +302,9 @@ final class AudioDeviceManager: ObservableObject {
                 if $0.sampleRate != $1.sampleRate { return $0.sampleRate < $1.sampleRate }
                 return $0.bitDepth < $1.bitDepth
             }
-            let current = streams.compactMap(currentChoice).first
+            // Optimization: Lazily inspect stream formats to short-circuit upon finding the first valid
+            // physical format, avoiding redundant CoreAudio HAL queries across remaining output streams.
+            let current = streams.lazy.compactMap(currentChoice).first
             return AudioOutputDevice(id: uid, deviceID: device, name: name, isAlive: alive,
                                      currentFormat: current, choices: choices, streamIDs: streams)
         }
