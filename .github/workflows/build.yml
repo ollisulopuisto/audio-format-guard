@@ -23,7 +23,7 @@ jobs:
     outputs:
       package: ${{ steps.scope.outputs.package }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - id: scope
