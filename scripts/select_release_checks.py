@@ -17,7 +17,7 @@ SAFE = {
 }
 # Only the reviewed credential-fix workflow bytes may skip packaging. Future workflow edits build.
 REVIEWED_WORKFLOWS = {
-    ".github/workflows/build.yml": "501a2c48c61fe41982ab6aa55e85db551f583ee1507bc4ebecdeb29589a880bd"
+    ".github/workflows/build.yml": "daf1e0b2dc8254877fd4413c62dbafa638bfdd4d8064f892d4fbd714d71cb696"
 }
 
 

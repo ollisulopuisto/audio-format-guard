@@ -8,14 +8,25 @@ struct ChangelogSection: Equatable {
 }
 
 enum ChangelogNotes {
+    // Optimization: Cache loaded changelog sections for the main bundle so repetitive
+    // calls (e.g. checkForUpgrade, version fallback, showHistory) avoid redundant file I/O and parsing.
+    private static var cachedMainSections: [ChangelogSection]?
+
     /// Released sections from the bundled CHANGELOG.md, newest first.
     /// Headings are Keep a Changelog calver: `## [v26.09.28.6] - 2026-09-28`.
     /// `[Unreleased]` never ships in the dialog. A missing bundle resource is
     /// silence, not a crash.
     static func load(bundle: Bundle = .main) -> [ChangelogSection] {
+        if bundle == .main, let cached = cachedMainSections {
+            return cached
+        }
         guard let url = bundle.url(forResource: "CHANGELOG", withExtension: "md"),
               let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
-        return parse(text)
+        let sections = parse(text)
+        if bundle == .main {
+            cachedMainSections = sections
+        }
+        return sections
     }
 
     static func parse(_ markdown: String) -> [ChangelogSection] {
