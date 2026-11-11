@@ -37,6 +37,7 @@ final class AudioFormatGuardTests: XCTestCase {
         XCTAssertEqual(decoded.format.sampleRate, 96_000)
         XCTAssertEqual(decoded.format.bitDepth, 24)
         XCTAssertEqual(decoded.format.channels, 2)
+        XCTAssertEqual(decoded.format.summary, "96 kHz · 24-bit · 2 ch")
         XCTAssertTrue(decoded.automaticallyRestore)
     }
 
