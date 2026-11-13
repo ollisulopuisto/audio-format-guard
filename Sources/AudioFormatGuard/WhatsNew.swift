@@ -67,21 +67,34 @@ enum ChangelogNotes {
     /// Numeric per-segment compare, ignoring a leading "v" or "V". A missing trailing
     /// segment counts as zero, so 26.09.28 < 26.09.28.1.
     ///
-    /// Optimization: Stream version segments lazily using Substring splits and iterators
-    /// without allocating intermediate String instances or [Int] arrays. Short-circuits
-    /// on the first differing segment.
+    /// Optimization: Walks both version strings in a single pass with index arithmetic
+    /// instead of `split(separator:)`, which allocated a `[Substring]` array (plus per-segment
+    /// Substrings and iterators) on every call. Segments are still parsed with `Int`, so
+    /// non-numeric or overflowing segments coerce to zero and the "missing trailing segment
+    /// counts as zero" rule is preserved exactly as before.
     static func compareVersions(_ a: String, _ b: String) -> Int {
-        let rawA = (a.hasPrefix("v") || a.hasPrefix("V")) ? a.dropFirst() : a[...]
-        let rawB = (b.hasPrefix("v") || b.hasPrefix("V")) ? b.dropFirst() : b[...]
-        var iterA = rawA.split(separator: ".").makeIterator()
-        var iterB = rawB.split(separator: ".").makeIterator()
+        let aStart: String.Index = (a.hasPrefix("v") || a.hasPrefix("V")) ? a.index(after: a.startIndex) : a.startIndex
+        let bStart: String.Index = (b.hasPrefix("v") || b.hasPrefix("V")) ? b.index(after: b.startIndex) : b.startIndex
+        var ia = aStart, ib = bStart
+        let ea = a.endIndex, eb = b.endIndex
+
+        /// Extracts the next segment. Empty runs of "." are skipped, mirroring
+        /// `split(separator:)` which omits empty subsequences. Returns `present: false`
+        /// when the string is exhausted, i.e. a missing trailing segment (counts as zero).
+        func nextSegment(_ s: String, _ i: inout String.Index, _ end: String.Index) -> (value: Int, present: Bool) {
+            while i < end, s[i] == "." { i = s.index(after: i) }
+            guard i < end else { return (0, false) }
+            var j = i
+            while j < end, s[j] != "." { j = s.index(after: j) }
+            let seg = s[i..<j]
+            i = (j < end) ? s.index(after: j) : j
+            return (Int(seg) ?? 0, true)
+        }
 
         while true {
-            let nextA = iterA.next()
-            let nextB = iterB.next()
-            if nextA == nil && nextB == nil { return 0 }
-            let va = nextA.flatMap { Int($0) } ?? 0
-            let vb = nextB.flatMap { Int($0) } ?? 0
+            let (va, ha) = nextSegment(a, &ia, ea)
+            let (vb, hb) = nextSegment(b, &ib, eb)
+            if !ha && !hb { return 0 }
             if va != vb { return va < vb ? -1 : 1 }
         }
     }
